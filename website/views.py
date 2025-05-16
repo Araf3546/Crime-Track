@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
-from .models import Crime, User, Category, Chat, Volunteer, Event, EventParticipant, Feedback
+from .models import Crime, User, Category, Chat, Volunteer, Event, EventParticipant, Feedback, Contribution, AppreciationMessage
 from . import db
 from datetime import datetime
 from collections import defaultdict
@@ -10,7 +10,6 @@ from geopy.geocoders import Nominatim
 import requests
 import random
 from sqlalchemy import func as sql_func
-from .models import Contribution, AppreciationMessage
 
 views = Blueprint('views', __name__)
 
@@ -284,41 +283,6 @@ def delete_crime(crime_id):
         flash('Crime not found.', category='error')
     return redirect(url_for('views.admin_tools'))  
 
-# @views.route('/report_crime', methods=['GET', 'POST'])
-# @login_required
-# def report_crime():
-#     crimes = Crime.query.all()
-#     categories = Category.query.all()
-#     if request.method == 'POST': 
-#         title = request.form.get('Title')  
-#         location = request.form.get('Location')  
-#         data = request.form.get('Description')  
-#         category_id = request.form.get('category-id')  
-
-#         if not title or len(title) < 3:
-#             flash('Title is too short!', category='error')
-#         elif not location or len(location) < 3:
-#             flash('Location is too short!', category='error')
-#         elif not data or len(data) < 5:
-#             flash('Description is too short!', category='error')
-#         else:
-#             new_crime = Crime(
-#                 title=title,
-#                 location=location,
-#                 data=data,
-#                 user_id=current_user.id
-#             )
-#             db.session.add(new_crime)
-
-#             selected_category = Category.query.filter_by(cat_id=category_id).first()
-#             if selected_category:
-#                 selected_category.count += 1
-#                 db.session.commit()
-#                 flash('Crime posted and category updated!', category='success')
-#             else:
-#                 flash('Invalid category selected!', category='error')
-    
-#     return render_template("report_crime.html", user=current_user, crimes=crimes, categories=categories)
 
 @views.route('/report_crime', methods=['GET', 'POST'])
 @login_required
@@ -456,7 +420,6 @@ def clear_markers():
     )
 
 def safe_geocode(location_str, attempts=3, timeout=5):
-    """Helper function to safely geocode locations with retries"""
     if not location_str:
         return None
         
