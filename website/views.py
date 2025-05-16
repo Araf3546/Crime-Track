@@ -33,27 +33,14 @@ def home():
     chats = Chat.query.all()
     crimes = Crime.query.all()
     categories = Category.query.all()
+    
     for crime in crimes:
         crime.user = User.query.get(crime.user_id)
         if crime.location and crime.location not in crime_locations:
             crime_locations.append(crime.location)
             
-    # for crime_location in crime_locations:
-    #     if crime_location:
-    #         location = safe_geocode(crime_location)
-    #         if location:
-    #             searched_location = [location.latitude, location.longitude]     
-    #             folium.CircleMarker(
-    #                 location=searched_location,
-    #                 radius=random.randint(10,50),
-    #                 color="red",
-    #                 fill=True,
-    #                 fill_color="red",
-    #                 fill_opacity=0.2,
-    #                 popup=f'{crime_location}'
-    #             ).add_to(m)
 
-    return render_template("home.html", 
+    return render_template("home.html",
                           user=current_user, 
                           crimes=crimes, 
                           categories=categories, 
@@ -413,66 +400,6 @@ def get_upcoming_events():
         upcoming_events=upcoming_events,
         new_events=upcoming_events > 0
     )
-def clear_markers():
-    global m, default_location, zoom_level
-    m = folium.Map(
-        location=default_location,
-        zoom_start=zoom_level,
-        tiles='cartodbdark_matter',
-    )
-
-def safe_geocode(location_str, attempts=3, timeout=5):
-    """Helper function to safely geocode locations with retries"""
-    if not location_str:
-        return None
-        
-    geolocator = Nominatim(user_agent="crime_map", timeout=timeout)
-    
-    for _ in range(attempts):
-        try:
-            return geolocator.geocode(location_str)
-        except Exception as e:
-            print(f"Geocoding error for {location_str}: {str(e)}")
-            continue
-    return None
-
-# @views.route('/show_interest/<int:event_id>', methods=['POST'])
-# @login_required
-# def show_interest(event_id):
-#     if current_user.id == 1:
-#         return jsonify({'error': 'Admin cannot show interest in events'}), 400
-        
-#     existing = EventParticipant.query.filter_by(
-#         event_id=event_id, 
-#         user_id=current_user.id
-#     ).first()
-    
-#     if existing:
-#         db.session.delete(existing)
-#         message = 'Removed interest from event'
-#         # Remove contribution
-#         Contribution.query.filter_by(
-#             user_id=current_user.id,
-#             activity_type='event_interest',
-#             event_id=event_id
-#         ).delete()
-#     else:
-#         participant = EventParticipant(event_id=event_id, user_id=current_user.id)
-#         db.session.add(participant)
-#         # Add contribution - remove event_id if not needed
-#         contribution = Contribution(
-#             user_id=current_user.id,
-#             activity_type='event_interest',
-#             score=1
-#         )
-#         db.session.add(contribution)
-#         message = 'Showed interest in event'
-    
-#     db.session.commit()
-#     return jsonify({
-#         'message': message,
-#         'is_interested': existing is None
-#     })
 
 @views.route('/show_interest/<int:event_id>', methods=['POST'])
 @login_required
@@ -519,6 +446,29 @@ def show_interest(event_id):
         'message': message,
         'is_interested': existing is None
     })
+
+def clear_markers():
+    global m, default_location, zoom_level
+    m = folium.Map(
+        location=default_location,
+        zoom_start=zoom_level,
+        tiles='cartodbdark_matter',
+    )
+
+def safe_geocode(location_str, attempts=3, timeout=5):
+    """Helper function to safely geocode locations with retries"""
+    if not location_str:
+        return None
+        
+    geolocator = Nominatim(user_agent="crime_map", timeout=timeout)
+    
+    for _ in range(attempts):
+        try:
+            return geolocator.geocode(location_str)
+        except Exception as e:
+            print(f"Geocoding error for {location_str}: {str(e)}")
+            continue
+    return None
 
 @views.route('/live-map', methods=['GET', 'POST'])
 @login_required
@@ -613,31 +563,6 @@ def live_map():
     map_html = m._repr_html_()
     return render_template('live_map.html', map_html=map_html, user=current_user)
 
-# @views.route('/volunteer_signup', methods=['GET', 'POST'])
-# @login_required
-# def volunteer_signup():
-#     if request.method == 'POST':
-#         phone = request.form.get('phone')
-#         location = request.form.get('location')
-        
-#         if not phone or len(phone) < 10:
-#             flash('Invalid phone number!', category='error')
-#         elif not location or len(location) < 3:
-#             flash('Location is too short!', category='error')
-#         else:
-#             new_volunteer = Volunteer(
-#                 name=current_user.first_name,
-#                 email=current_user.email,
-#                 phone=phone,
-#                 location=location,
-#                 user_id=current_user.id
-#             )
-#             db.session.add(new_volunteer)
-#             db.session.commit()
-#             flash('Volunteer application sent successfully!', category='success')
-#             return redirect(url_for('views.home'))
-
-#     return render_template("volunteer_signup.html", user=current_user)
 
 @views.route('/volunteer_signup', methods=['GET', 'POST'])
 @login_required
